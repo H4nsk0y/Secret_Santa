@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#faf3e5">
+  <meta name="referrer" content="no-referrer">
+  <title>Тайный Санта</title>
+  <link rel="icon" type="image/png" href="./assets/favicon.png">
+  <link rel="stylesheet" href="./styles.css">
+  <script defer src="./santa.js"></script>
+</head>
+<body>
+  <main class="page">
+    <div class="frame">
+      <div class="heading">
+        <span class="ornament" aria-hidden="true">✦</span>
+        <p class="addressee" id="addressee" hidden></p>
+        <h1>Тайный Санта</h1>
+        <p id="intro">Открой конверт, чтобы узнать, кому готовить подарок.</p>
+      </div>
+
+      <div class="scene" id="scene">
+        <div class="sparks" id="sparks" aria-hidden="true"></div>
+        <div class="envelope">
+          <div class="envelope-back" aria-hidden="true"></div>
+          <section class="letter" id="letter" hidden aria-labelledby="recipient">
+            <span class="letter-star" aria-hidden="true">✧</span>
+            <p class="letter-label">Твой получатель</p>
+            <h2 id="recipient" tabindex="-1"></h2>
+          </section>
+          <div class="envelope-pocket" aria-hidden="true"></div>
+          <div class="envelope-flap" aria-hidden="true"></div>
+          <div class="seal" aria-hidden="true">✶</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="reveal" id="reveal">Узнать, кому я дарю <span aria-hidden="true">✧</span></button>
+        <p class="note" id="note" role="status"></p>
+        <button type="button" class="sound" id="sound" hidden></button>
+      </div>
+
+      <audio id="song" src="./assets/jingle-bell-rock.mp3" preload="none" loop></audio>
+      <noscript>Включи JavaScript, чтобы открыть конверт.</noscript>
+    </div>
+  </main>
+</body>
+</html>
