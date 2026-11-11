@@ -1,4 +1,4 @@
-import { createCipheriv, randomBytes, randomInt } from "node:crypto";
+import { createCipheriv, createDecipheriv, randomBytes, randomInt } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
 
 const participantsFile = new URL("./participants.local.txt", import.meta.url);
@@ -26,16 +26,46 @@ function createInvitation(page, addressee, recipient) {
   return invitation.href;
 }
 
-async function main() {
-  const [pageArgument, ...extra] = process.argv.slice(2);
-  if (extra.length) throw new Error("Укажи только адрес страницы.");
+function readInvitationRecord(record, index) {
+  try {
+    const lines = record.split("\n");
+    if (lines.length !== 2) throw new Error("Invalid invitation record");
+    const [addressee, link] = lines;
+    const match = /^#santa=([12])\.([\w-]+)\.([\w-]+)\.([\w-]+)$/.exec(new URL(link).hash);
+    if (!match) throw new Error("Invalid invitation format");
 
-  const page = pageArgument ? new URL(pageArgument) : new URL("./index.html", import.meta.url);
-  if (page.protocol !== "https:" && page.protocol !== "file:") {
-    throw new Error("Укажи HTTPS-адрес опубликованной страницы или используй запуск без адреса для локальной проверки.");
+    const [, version, ...encoded] = match;
+    const [key, iv, ciphertext] = encoded.map((part) => Buffer.from(part, "base64url"));
+    const decipher = createDecipheriv("aes-256-gcm", key, iv);
+    decipher.setAuthTag(ciphertext.subarray(-16));
+    const payload = Buffer.concat([decipher.update(ciphertext.subarray(0, -16)), decipher.final()]).toString("utf8");
+    const invitation = version === "1" ? { addressee, recipient: payload } : JSON.parse(payload);
+    if (invitation.addressee !== addressee) throw new Error("The name and the link do not match");
+    return invitation;
+  } catch {
+    throw new Error("Приглашение №" + (index + 1) + " повреждено или ссылка не соответствует имени над ней.");
   }
-  if (page.hash) throw new Error("Укажи адрес страницы без фрагмента после #.");
+}
 
+function verifyInvitations(contents, names) {
+  const assignments = contents.trim().replace(/\r\n/g, "\n").split("\n\n").map(readInvitationRecord);
+  const givers = new Set(assignments.map(({ addressee }) => addressee));
+  const recipients = new Set(assignments.map(({ recipient }) => recipient));
+
+  if (assignments.length !== names.length || names.some((name) => !givers.has(name))) {
+    throw new Error("Имена отправителей в файле приглашений не совпадают со списком участников.");
+  }
+  if (names.some((name) => !recipients.has(name))) {
+    throw new Error("Не у каждого участника есть ровно один даритель.");
+  }
+  if (assignments.some(({ addressee, recipient }) => addressee === recipient)) {
+    throw new Error("Как минимум один участник дарит подарок самому себе.");
+  }
+
+  return assignments;
+}
+
+async function readParticipants() {
   const list = await readFile(participantsFile, "utf8");
   const names = list.split(/\r?\n/).map((name) => name.trim()).filter(Boolean);
   if (names.length < 2) throw new Error("Для жеребьёвки нужны хотя бы два участника.");
@@ -44,18 +74,57 @@ async function main() {
   if (distinctNames.size !== names.length) {
     throw new Error("У участников должны быть разные подписи. Например, «Саша (старший)» и «Саша (младший)».");
   }
+  return names;
+}
+
+function printVerification(count) {
+  console.log("Проверено приглашений: " + count + ". Каждый дарит и получает ровно один подарок. Никто не дарит себе.");
+}
+
+async function main() {
+  const [pageArgument, ...options] = process.argv.slice(2);
+  const verify = pageArgument === "--verify";
+  const showPairs = verify && options[0] === "--show-pairs";
+  if (options.length > (showPairs ? 1 : 0)) {
+    throw new Error("Укажи адрес страницы или запусти node draw.mjs --verify [--show-pairs].");
+  }
+
+  const names = await readParticipants();
+  if (verify) {
+    const contents = await readFile(resultsFile, "utf8");
+    const assignments = verifyInvitations(contents, names);
+    printVerification(assignments.length);
+    if (showPairs) {
+      for (const { addressee, recipient } of assignments) {
+        console.log(addressee + " → " + recipient);
+      }
+    }
+    return;
+  }
+
+  const page = pageArgument ? new URL(pageArgument) : new URL("./index.html", import.meta.url);
+  if (page.protocol !== "https:" && page.protocol !== "file:") {
+    throw new Error("Укажи HTTPS-адрес опубликованной страницы или используй запуск без адреса для локальной проверки.");
+  }
+  if (page.hash) throw new Error("Укажи адрес страницы без фрагмента после #.");
 
   const recipients = assignRecipients(names);
   const invitations = names.map((name, index) => name + "\n" + createInvitation(page, name, recipients[index]));
-  await writeFile(resultsFile, invitations.join("\n\n") + "\n", { encoding: "utf8", flag: "wx" });
-  console.log("Готово! Ссылки для " + names.length + " участников записаны в invitations.local.txt.");
+  const contents = invitations.join("\n\n") + "\n";
+  verifyInvitations(contents, names);
+  await writeFile(resultsFile, contents, { encoding: "utf8", flag: "wx" });
+  printVerification(names.length);
+  console.log("Ссылки записаны в invitations.local.txt.");
 }
 
 main().catch((error) => {
   if (error.code === "EEXIST") {
     console.error("invitations.local.txt уже существует. Перемести его в другое место перед новой жеребьёвкой.");
   } else if (error.code === "ENOENT") {
-    console.error("Создай participants.local.txt рядом с draw.mjs и запиши по одному имени на строку в UTF-8.");
+    const message = error.path?.endsWith("invitations.local.txt")
+      ? "Приглашений пока нет. Проведи жеребьёвку после утверждения списка."
+      : "Создай participants.local.txt рядом с draw.mjs и запиши по одному имени на строку в UTF-8.";
+    console.error(message);
   } else {
     console.error(error.message);
   }

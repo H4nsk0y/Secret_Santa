@@ -13,36 +13,41 @@
 <body>
   <main class="page">
     <div class="frame">
-      <div class="heading">
-        <span class="ornament" aria-hidden="true">✦</span>
-        <p class="addressee" id="addressee" hidden></p>
-        <h1>Тайный Санта</h1>
-        <p id="intro">Открой конверт, чтобы узнать, кому готовить подарок.</p>
-      </div>
+      <div class="holiday-photo" aria-hidden="true"></div>
+      <div class="invitation">
+        <div class="heading">
+          <p class="addressee" id="addressee" hidden></p>
+          <h1>Тайный Санта</h1>
+          <p id="intro">Нажми на подарок, чтобы узнать, кому ты даришь.</p>
+        </div>
 
-      <div class="scene" id="scene">
-        <div class="sparks" id="sparks" aria-hidden="true"></div>
-        <div class="envelope">
-          <div class="envelope-back" aria-hidden="true"></div>
-          <section class="letter" id="letter" hidden aria-labelledby="recipient">
-            <span class="letter-star" aria-hidden="true">✧</span>
-            <p class="letter-label">Твой получатель</p>
-            <h2 id="recipient" tabindex="-1"></h2>
-          </section>
-          <div class="envelope-pocket" aria-hidden="true"></div>
-          <div class="envelope-flap" aria-hidden="true"></div>
-          <div class="seal" aria-hidden="true">✶</div>
+        <div class="scene" id="scene">
+          <div class="sparks" id="sparks" aria-hidden="true"></div>
+          <div class="gift">
+            <div class="gift-interior" aria-hidden="true"></div>
+            <section class="letter" id="letter" hidden aria-labelledby="recipient">
+              <span class="letter-star" aria-hidden="true">✧</span>
+              <p class="letter-label">Ты даришь подарок</p>
+              <h2 id="recipient" tabindex="-1"></h2>
+            </section>
+            <div class="gift-base wrapping" aria-hidden="true"></div>
+            <div class="gift-lid wrapping" aria-hidden="true">
+              <span class="bow"><span class="bow-knot"></span></span>
+            </div>
+            <button type="button" class="reveal" id="reveal" disabled>
+              <span>Открыть подарок <span aria-hidden="true">✧</span></span>
+            </button>
+          </div>
+        </div>
+
+        <div class="actions">
+          <p class="note" id="note" role="status"></p>
+          <button type="button" class="sound" id="sound" hidden></button>
         </div>
       </div>
 
-      <div class="actions">
-        <button type="button" class="reveal" id="reveal">Узнать, кому я дарю <span aria-hidden="true">✧</span></button>
-        <p class="note" id="note" role="status"></p>
-        <button type="button" class="sound" id="sound" hidden></button>
-      </div>
-
       <audio id="song" src="./assets/jingle-bell-rock.mp3" preload="none" loop></audio>
-      <noscript>Включи JavaScript, чтобы открыть конверт.</noscript>
+      <noscript>Включи JavaScript, чтобы открыть подарок.</noscript>
     </div>
   </main>
 </body>

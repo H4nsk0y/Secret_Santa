@@ -88,7 +88,7 @@ sound.addEventListener("click", () => {
   }
 });
 
-async function prepareEnvelope() {
+async function prepareGift() {
   reveal.disabled = true;
   const fragment = window.location.hash;
   let invitation;
@@ -113,10 +113,10 @@ async function prepareEnvelope() {
     letter.addEventListener("animationend", () => recipient.focus({ preventScroll: true }), { once: true });
     scene.classList.add("open");
     reveal.hidden = true;
-    intro.textContent = "Конверт открыт. Теперь можно готовить подарок!";
+    intro.textContent = "Теперь можно готовить подарок!";
   }, { once: true });
 }
 
-void prepareEnvelope();
+void prepareGift();
 
 window.addEventListener("hashchange", () => window.location.reload());
