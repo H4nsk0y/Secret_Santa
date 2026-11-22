@@ -26,12 +26,12 @@
     canvas.width = Math.round(width * ratio);
     canvas.height = Math.round(height * ratio);
     context?.setTransform(ratio, 0, 0, ratio, 0, 0);
-    const count = Math.min(64, Math.max(24, Math.round(width / 23)));
+    const count = Math.min(160, Math.max(64, Math.round(width / 9)));
     flakes = Array.from({ length: count }, () => ({
       x: Math.random() * width,
       y: Math.random() * height,
-      radius: 1 + Math.random() * 1.5,
-      speed: 16 + Math.random() * 18,
+      radius: 1.7 + Math.random() * 2.3,
+      speed: 22 + Math.random() * 22,
       phase: Math.random() * Math.PI * 2,
     }));
   }
@@ -40,17 +40,20 @@
     const delta = previousTime ? Math.min((time - previousTime) / 1000, 0.05) : 0;
     previousTime = time;
     context.clearRect(0, 0, width, height);
-    context.fillStyle = "rgba(241,238,232,0.48)";
+    context.fillStyle = "rgba(255,255,255,0.92)";
+    context.strokeStyle = "rgba(105,128,145,0.38)";
+    context.lineWidth = 0.8;
     for (const flake of flakes) {
       flake.y += flake.speed * delta;
-      flake.x += Math.sin(time / 3000 + flake.phase) * 5 * delta;
-      if (flake.y > height + 4) {
-        flake.y = -4;
+      flake.x += Math.sin(time / 3000 + flake.phase) * 8 * delta;
+      if (flake.y > height + 5) {
+        flake.y = -5;
         flake.x = Math.random() * width;
       }
       context.beginPath();
       context.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
       context.fill();
+      context.stroke();
     }
     frame = requestAnimationFrame(draw);
   }
