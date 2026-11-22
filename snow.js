@@ -26,12 +26,12 @@
     canvas.width = Math.round(width * ratio);
     canvas.height = Math.round(height * ratio);
     context?.setTransform(ratio, 0, 0, ratio, 0, 0);
-    const count = Math.min(160, Math.max(64, Math.round(width / 9)));
+    const count = Math.min(320, Math.max(120, Math.round(width / 4.5)));
     flakes = Array.from({ length: count }, () => ({
       x: Math.random() * width,
       y: Math.random() * height,
-      radius: 1.7 + Math.random() * 2.3,
-      speed: 22 + Math.random() * 22,
+      radius: 2.5 + Math.random() * 4,
+      speed: 32 + Math.random() * 33,
       phase: Math.random() * Math.PI * 2,
     }));
   }
@@ -40,14 +40,17 @@
     const delta = previousTime ? Math.min((time - previousTime) / 1000, 0.05) : 0;
     previousTime = time;
     context.clearRect(0, 0, width, height);
-    context.fillStyle = "rgba(255,255,255,0.92)";
-    context.strokeStyle = "rgba(105,128,145,0.38)";
-    context.lineWidth = 0.8;
+    context.fillStyle = "#ffffff";
+    context.strokeStyle = "rgba(89,115,135,0.55)";
+    context.lineWidth = 1;
+    context.shadowColor = "rgba(62,83,103,0.45)";
+    context.shadowBlur = 3;
+    context.shadowOffsetY = 1;
     for (const flake of flakes) {
       flake.y += flake.speed * delta;
-      flake.x += Math.sin(time / 3000 + flake.phase) * 8 * delta;
-      if (flake.y > height + 5) {
-        flake.y = -5;
+      flake.x += Math.sin(time / 3000 + flake.phase) * 14 * delta;
+      if (flake.y > height + 10) {
+        flake.y = -10;
         flake.x = Math.random() * width;
       }
       context.beginPath();
